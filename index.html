@@ -9,8 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/css/select2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-yaml.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/ace.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-yaml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
     <link rel='stylesheet' id='theme-link'>
     <link rel='stylesheet' id='iconlib-link'>
     <style>
@@ -56,7 +58,7 @@
                 <p>Below is the editor generated from the JSON Schema. Changes are synced with the JSON-LD playground (and vice versa).</p>
                 <div id="json-editor-form" class="json-editor-compact"></div>
             </div>
-            <div class='col-2 col-md-2 w-2/12' style="display: none;">
+            <div class='col-4 col-md-4 w-4/12'>
                 <h2>JSON Output</h2>
                 <p>You can also make changes to the JSON here and set the value in the editor by clicking "Update Form"
                 </p>
@@ -149,12 +151,12 @@
                     </div>
                 </div>
             </div>
-            <div class='col-4 col-md-4 w-4/12'>
+            <!-- <div class='col-4 col-md-4 w-4/12'>
                 <h1>3. JSON-LD</h1>
                 <p>JSON originates from the Form-Editor while the context is extracted from the schema. Scroll down to see processed forms, e. g. RDF.
                 </p>
                 <iframe id="json-ld-playground-iframe" src="./json-ld/playground/" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
+            </div> -->
         </div>
     </div>
     <script>
@@ -239,9 +241,10 @@
             maxLines: Infinity,
             minLines: 5,
             showFoldWidgets: true,
-            showPrintMargin: false
+            showPrintMargin: false,
+            fontSize: "12pt"
         }
-
+        
         var jsoneditor = null
         var directLink = document.querySelector('#direct-link')
 
@@ -303,7 +306,8 @@
 
         var refreshUI = function () {
             // schema
-            schemaTextarea.value = JSON.stringify(data.options.schema, null, 2)
+            //schemaTextarea.value = JSON.stringify(data.options.schema, null, 2)
+            schemaTextarea.value = jsyaml.dump(data.options.schema);
 
             // theme
             var themeMap = {
@@ -502,7 +506,8 @@
             jsoneditor.on('change', function () {
                 // output
                 data.json = jsoneditor.getValue()
-                outputTextarea.value = JSON.stringify(data.json, null, 2)
+                //outputTextarea.value = JSON.stringify(data.json, null, 2)
+                outputTextarea.value = jsyaml.dump(data.json);
 
                 // validate
                 var validationErrors = jsoneditor.validate()
@@ -516,6 +521,8 @@
                 //copy the data
                 var jsonld_data = JSON.parse(JSON.stringify(data.json));
                 jsonld_data = { ...{ "@context": jsoneditor.options.schema["@context"] }, ...jsonld_data };
+
+
 
                 // simulate input within the json-ld playground iframe input with id="markup"
                 var jsonldPlaygroundIframe = document.getElementById("json-ld-playground-iframe")
@@ -598,13 +605,15 @@
         /* -------------------------------------------------------- event listeners */
 
         setValue.addEventListener('click', function () {
-            jsoneditor.setValue(JSON.parse(outputTextarea.value))
+            //jsoneditor.setValue(JSON.parse(outputTextarea.value))
+            jsoneditor.setValue(jsyaml.load(outputTextarea.value))
         })
 
         setSchema.addEventListener('click', function () {
             try {
                 data.json = null;
-                data.options.schema = JSON.parse(schemaTextarea.value)
+                //data.options.schema = JSON.parse(schemaTextarea.value)
+                data.options.schema = jsyaml.load(schemaTextarea.value)
             } catch (e) {
                 alert('Invalid Schema: ' + e.message)
                 return
