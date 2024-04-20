@@ -244,7 +244,7 @@
             showPrintMargin: false,
             fontSize: "12pt"
         }
-        
+
         var jsoneditor = null
         var directLink = document.querySelector('#direct-link')
 
@@ -549,7 +549,7 @@
                                     var codeMirrorData2 = JSON.parse(codeMirror.getValue());
                                     
                                     jsoneditor.options.schema["@context"] = codeMirrorData2["@context"]; 
-                                    document.getElementById("schema-textarea").value = JSON.stringify(jsoneditor.options.schema, null, 2);
+                                    document.getElementById("schema-textarea").setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
                                     var codeMirrorData = JSON.parse(codeMirror.getValue());
                                     delete codeMirrorData["@context"];
                                     if (JSON.stringify(codeMirrorData, null, 2) !== JSON.stringify(jsoneditor.getValue(codeMirrorData), null, 2)) {
@@ -607,15 +607,15 @@
         /* -------------------------------------------------------- event listeners */
 
         setValue.addEventListener('click', function () {
-            //jsoneditor.setValue(JSON.parse(outputTextarea.value))
-            jsoneditor.setValue(jsyaml.load(outputTextarea.value))
+            //jsoneditor.setValue(JSON.parse(outputTextarea.getValue()))
+            jsoneditor.setValue(jsyaml.load(outputTextarea.getValue()))
         })
 
         setSchema.addEventListener('click', function () {
             try {
                 data.json = null;
-                //data.options.schema = JSON.parse(schemaTextarea.value)
-                data.options.schema = jsyaml.load(schemaTextarea.value)
+                //data.options.schema = JSON.parse(schemaTextarea.getValue())
+                data.options.schema = jsyaml.load(schemaTextarea.getValue())
             } catch (e) {
                 alert('Invalid Schema: ' + e.message)
                 return
