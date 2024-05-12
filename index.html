@@ -298,7 +298,8 @@ import js
 js.window.ace.edit("output-textarea").setValue(p.json(indent=2))
 """
 
-js.window.ace.edit("code").setValue(content)
+# export as json
+js.window.jsoneditor.setValue(js.window.JSON.parse(p.json()))
 `;
 
         // parse url -> merge options -> refreshUI() -> initJsoneditor() -> direct link
