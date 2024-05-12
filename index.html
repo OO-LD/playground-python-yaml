@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.6-rc.1/dist/css/select2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-yaml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-python.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.14.0/src-noconflict/mode-sh.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
 
     <link rel='stylesheet' id='theme-link'>
     <link rel='stylesheet' id='iconlib-link'>
@@ -50,13 +53,21 @@
                     make
                     changes, click "Update Schema"</label>
                 <button class='btn btn-primary btn-block' id='setschema'>Update Schema</button>
-                <textarea id='schema-textarea' rows="30" style="width: 100%; font-family: monospace;"
-                    class='form-control'></textarea>
+                <div id='schema-textarea' rows="30" style="width: 100%; font-family: monospace;"
+                    class='form-control'></div>
             </div>
-            <div class='col-3 col-md-3 w-3/12'>
+            <div class='col-3 col-md-3 w-3/12' style="display:none">
                 <h1>2. Editor</h1>
                 <p>Below is the editor generated from the JSON Schema part of the OO-LD Schema. Changes are synced with the JSON/YAML Output and JSON-LD playground (and vice versa).</p>
                 <div id="json-editor-form" class="json-editor-compact"></div>
+            </div>
+            <div class='col-3 col-md-3 w-3/12'>
+                <h1>2. Python</h1>
+                <p>Below is the editor generated from the JSON Schema part of the OO-LD Schema. Changes are synced with the JSON/YAML Output and JSON-LD playground (and vice versa).</p>
+                <div id="code" rows="15"></div>
+                <button class='btn btn-primary btn-block' onclick="evaluatePython()">Run Python Code</button>
+                <h2>Debug Console</h2>
+                <div id="output" style="width: 100%;" rows="6" disabled></div>
             </div>
             <div class='col-3 col-md-3 w-3/12'>
                 <h1>3. JSON/YAML Output</h1>
@@ -64,8 +75,8 @@
                 </p>
                 <label for="output-textarea"></label>
                 <button class='btn btn-primary btn-block' id='setvalue'>Update Form</button>
-                <textarea id='output-textarea' rows="15" style="width: 100%; font-family: monospace;"
-                    class='form-control'></textarea>
+                <div id='output-textarea' rows="15" style="width: 100%; font-family: monospace;"
+                    class='form-control'></div>
                 <h2>Validation</h2>
                 <label for="validate-textarea">This will update whenever the form changes to show validation errors if
                     there
@@ -230,6 +241,40 @@
             }
           }
         }
+
+        const codegen_code = `
+from pydantic import BaseModel
+import json
+from datamodel_code_generator import DataModelType, InputFileType, generate
+from datamodel_code_generator.parser.jsonschema import JsonSchemaParser
+
+import js
+
+schema =  js.window.ace.edit("schema-textarea").getValue()
+
+parser = JsonSchemaParser(
+    schema,
+    field_include_all_keys=True,
+    # use_default = True,
+    enum_field_as_literal="all",
+    use_title_as_name=True,
+    use_schema_description=True,
+    use_field_description=True,
+    encoding="utf-8",
+    use_double_quotes=True,
+    collapse_root_models=True,
+    reuse_model=True,
+)
+content = str(parser.parse())
+content = content + """
+p = Person(name="Python Generated")
+import js
+js.window.ace.edit("output-textarea").setValue(p.json(indent=2))
+"""
+
+js.window.ace.edit("code").setValue(content)
+`;
+
         // parse url -> merge options -> refreshUI() -> initJsoneditor() -> direct link
 
         /* ------------------------------------------------------------------- data */
@@ -273,6 +318,63 @@
         var themeSelect = document.querySelector('#theme-select')
         var themeLink = document.querySelector('#theme-link')
         var validateTextarea = document.querySelector('#validate-textarea')
+
+        const code = ace.edit('code', {mode: 'ace/mode/python', maxLines: Infinity, minLines: 5, fontSize: "12pt"});
+        const output = ace.edit('output', {mode: 'ace/mode/sh', maxLines: Infinity, minLines: 5, fontSize: "12pt"});
+        
+        function addToOutput(s) {
+            //output.value += ">>>" + code.value + "\n" ;
+            if (s) output.setValue(output.getValue() + s + "\n");
+        }
+        function stdOut(s) {
+            //console.log("StdOut", s);
+            output.setValue(output.getValue() + s + "\n");
+        }
+
+        code.setValue("# Initializing...\n");
+
+        output.setValue("Initializing...\n");
+
+        // init Pyodide
+        async function main() {
+            let pyodide = await loadPyodide({
+                stdout: stdOut,
+                stderr: stdOut,
+            });
+            await pyodide.loadPackage("pydantic");
+            await pyodide.loadPackage("micropip");
+            const micropip = pyodide.pyimport("micropip");
+            //await micropip.install("datamodel-code-generator");
+            // see: https://github.com/wolverdude/GenSON/issues/73
+            //await micropip.install("datamodel-code-generator-genson-wheel");
+            await micropip.install("ssl");
+            await micropip.install("datamodel-code-generator-genson-wheel[http]");
+            addToOutput("Ready!\n");
+            return pyodide;
+        }
+        let pyodideReadyPromise = main();
+
+        async function generatePython() {
+            let pyodide = await pyodideReadyPromise;
+            try {
+                let output = pyodide.runPython(codegen_code);
+                //addToOutput(output);
+            } catch (err) {
+                addToOutput(err);
+            }
+        }
+
+        async function evaluatePython() {
+            let pyodide = await pyodideReadyPromise;
+            try {
+                let output = pyodide.runPython(code.getValue());
+                addToOutput(output);
+            } catch (err) {
+                addToOutput(err);
+            }
+        }
+
+        generatePython();
 
         /* -------------------------------------------------------------- parse url */
 
@@ -319,6 +421,7 @@
             //schemaTextarea.setValue(JSON.stringify(data.options.schema, null, 2))
             schemaTextarea.setValue(jsyaml.dump(data.options.schema));
             schemaTextarea.clearSelection(1)
+            generatePython();
 
             // theme
             var themeMap = {
@@ -626,6 +729,7 @@
                 data.json = null;
                 //data.options.schema = JSON.parse(schemaTextarea.getValue())
                 data.options.schema = jsyaml.load(schemaTextarea.getValue())
+                generatePython();
             } catch (e) {
                 alert('Invalid Schema: ' + e.message)
                 return
