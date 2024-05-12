@@ -294,12 +294,13 @@ parser = JsonSchemaParser(
 content = str(parser.parse())
 content = content + """
 p = Person(name="Python Generated")
-import js
-js.window.ace.edit("output-textarea").setValue(p.json(indent=2))
-"""
 
 # export as json
+import js
 js.window.jsoneditor.setValue(js.window.JSON.parse(p.json()))
+"""
+
+js.window.ace.edit("code").setValue(content)
 `;
 
         // parse url -> merge options -> refreshUI() -> initJsoneditor() -> direct link
