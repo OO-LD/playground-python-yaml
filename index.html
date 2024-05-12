@@ -242,6 +242,32 @@
           }
         }
 
+const init_code = `
+import micropip
+
+await micropip.install("pydantic");
+#await micropip.install("datamodel-code-generator");
+# see: https://github.com/wolverdude/GenSON/issues/73
+#await micropip.install("datamodel-code-generator-genson-wheel");
+await micropip.install("ssl");
+await micropip.install("datamodel-code-generator-genson-wheel[http]");
+
+await micropip.install('pyodide-http')
+# 2. Patch requests
+import pyodide_http
+pyodide_http.patch_all()  # Patch all libraries
+
+# see: https://github.com/koenvo/pyodide-http/issues/37
+import requests
+import httpx
+def patch_get(url, headers, verify, follow_redirects
+    ):
+    return requests.get(
+        url, headers=headers, verify=verify, allow_redirects=follow_redirects
+    )
+httpx.get = patch_get
+`;
+
         const codegen_code = `
 from pydantic import BaseModel
 import json
@@ -341,14 +367,20 @@ js.window.ace.edit("code").setValue(content)
                 stdout: stdOut,
                 stderr: stdOut,
             });
-            await pyodide.loadPackage("pydantic");
+            //await pyodide.loadPackage("pydantic");
             await pyodide.loadPackage("micropip");
             const micropip = pyodide.pyimport("micropip");
             //await micropip.install("datamodel-code-generator");
             // see: https://github.com/wolverdude/GenSON/issues/73
             //await micropip.install("datamodel-code-generator-genson-wheel");
-            await micropip.install("ssl");
-            await micropip.install("datamodel-code-generator-genson-wheel[http]");
+            //await micropip.install("ssl");
+            //await micropip.install("datamodel-code-generator-genson-wheel[http]");
+            try {
+                let output = await pyodide.runPythonAsync(init_code);
+                //addToOutput(output);
+            } catch (err) {
+                addToOutput(err);
+            }
             addToOutput("Ready!\n");
             return pyodide;
         }
@@ -662,7 +694,7 @@ js.window.ace.edit("code").setValue(content)
                                     var codeMirrorData2 = JSON.parse(codeMirror.getValue());
                                     
                                     jsoneditor.options.schema["@context"] = codeMirrorData2["@context"]; 
-                                    document.getElementById("schema-textarea").setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
+                                    ace.edit('schema-textarea').setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
                                     var codeMirrorData = JSON.parse(codeMirror.getValue());
                                     delete codeMirrorData["@context"];
                                     if (JSON.stringify(codeMirrorData, null, 2) !== JSON.stringify(jsoneditor.getValue(codeMirrorData), null, 2)) {
