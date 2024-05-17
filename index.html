@@ -258,10 +258,10 @@ pyodide_http.patch_all()  # Patch all libraries
 # see: https://github.com/koenvo/pyodide-http/issues/37
 import requests
 import httpx
-def patch_get(url, headers, verify, follow_redirects
+def patch_get(url, headers, verify, follow_redirects, params
     ):
     return requests.get(
-        url, headers=headers, verify=verify, allow_redirects=follow_redirects
+        url, headers=headers, verify=verify, allow_redirects=follow_redirects, params=params
     )
 httpx.get = patch_get
 `;
