@@ -246,11 +246,8 @@ const init_code = `
 import micropip
 
 await micropip.install("pydantic");
-#await micropip.install("datamodel-code-generator");
-# see: https://github.com/wolverdude/GenSON/issues/73
-#await micropip.install("datamodel-code-generator-genson-wheel");
 await micropip.install("ssl");
-await micropip.install("datamodel-code-generator-genson-wheel[http]");
+await micropip.install("datamodel-code-generator[http]");
 
 await micropip.install('pyodide-http')
 # 2. Patch requests
