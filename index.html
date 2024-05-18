@@ -761,7 +761,6 @@ js.window.ace.edit("code").setValue(content)
                 data.json = null;
                 //data.options.schema = JSON.parse(schemaTextarea.getValue())
                 data.options.schema = jsyaml.load(schemaTextarea.getValue())
-                generatePython();
             } catch (e) {
                 alert('Invalid Schema: ' + e.message)
                 return
@@ -786,7 +785,7 @@ js.window.ace.edit("code").setValue(content)
 
         showErrorsSelect.addEventListener('change', function () {
             data.options.show_errors = this.value || ''
-            refreshUI()
+            ()
         })
 
         booleanOptionsSelect.addEventListener('change', function () {
@@ -794,7 +793,7 @@ js.window.ace.edit("code").setValue(content)
             for (var i = 0; i < booleanOptions.length; i++) {
                 data.options[booleanOptions[i].value] = booleanOptions[i].selected
             }
-            refreshUI()
+            ()
         })
 
         libSelect.addEventListener('change', function () {
@@ -810,7 +809,7 @@ js.window.ace.edit("code").setValue(content)
                     data.unselectedLibs.push(libs[i].value)
                 }
             }
-            refreshUI()
+            ()
         })
 
         parseUrl()
