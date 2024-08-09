@@ -443,6 +443,7 @@ js.window.ace.edit("code").setValue(content)
 
         var mergeOptions = function () {
             data.options = Object.assign(defaultOptions, data.options)
+            schemaTextarea.setValue(jsyaml.dump(data.options.schema));
             refreshUI()
         }
 
@@ -451,7 +452,7 @@ js.window.ace.edit("code").setValue(content)
         var refreshUI = function () {
             // schema
             //schemaTextarea.setValue(JSON.stringify(data.options.schema, null, 2))
-            schemaTextarea.setValue(jsyaml.dump(data.options.schema));
+            //schemaTextarea.setValue(jsyaml.dump(data.options.schema)); //may result in JSON serialization in some cases?
             schemaTextarea.clearSelection(1)
             generatePython();
 
