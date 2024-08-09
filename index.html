@@ -443,7 +443,6 @@ js.window.ace.edit("code").setValue(content)
 
         var mergeOptions = function () {
             data.options = Object.assign(defaultOptions, data.options)
-            schemaTextarea.setValue(jsyaml.dump(data.options.schema));
             refreshUI()
         }
 
@@ -452,7 +451,7 @@ js.window.ace.edit("code").setValue(content)
         var refreshUI = function () {
             // schema
             //schemaTextarea.setValue(JSON.stringify(data.options.schema, null, 2))
-            //schemaTextarea.setValue(jsyaml.dump(data.options.schema)); //may result in JSON serialization in some cases?
+            schemaTextarea.setValue(jsyaml.dump(data.options.schema));
             schemaTextarea.clearSelection(1)
             generatePython();
 
@@ -695,7 +694,7 @@ js.window.ace.edit("code").setValue(content)
                                     var codeMirrorData2 = JSON.parse(codeMirror.getValue());
                                     
                                     jsoneditor.options.schema["@context"] = codeMirrorData2["@context"]; 
-                                    ace.edit('schema-textarea').setValue(JSON.stringify(jsoneditor.options.schema, null, 2));
+                                    ace.edit('schema-textarea').setValue(jsyaml.dump(jsoneditor.options.schema));
                                     var codeMirrorData = JSON.parse(codeMirror.getValue());
                                     delete codeMirrorData["@context"];
                                     if (JSON.stringify(codeMirrorData, null, 2) !== JSON.stringify(jsoneditor.getValue(codeMirrorData), null, 2)) {
