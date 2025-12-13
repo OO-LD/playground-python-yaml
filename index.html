@@ -296,7 +296,7 @@ p = Person(name="Python Generated")
 
 # export as json
 import js
-js.window.jsoneditor.setValue(js.window.JSON.parse(p.json()))
+js.window.jsoneditor.setValue(js.window.JSON.parse(p.json(exclude_none=True)))
 """
 
 js.window.ace.edit("code").setValue(content)
